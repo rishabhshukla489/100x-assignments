@@ -41,24 +41,35 @@
  */
   const express = require('express');
   const bodyParser = require('body-parser');
-  
+  const fs=require("fs")
   const app = express();
   
   app.use(bodyParser.json());
-  let todos=[]
+
 
   app.get("/todos",(req,res)=>{
-    res.status(200).json(todos);
+    fs.readFile("todos.json","utf-8",(err,data)=>{
+        if(err) throw err;
+        console.log(todos)
+        res.status(200).json(data);
+    })
+    
   });
 
   app.get("/todos/:id",(req,res)=>{
     const id=req.params.id;
-    const todo=todos.find(t=>t.id===parseInt(id));
+    fs.readFile("todos.json","utf-8",(err,data)=>{
+        if(err) throw err;
+        const todos=JSON.parse(data);
+        console.log(todos)
+        const todo=todos.find(t=>t.id===parseInt(id));
     if(!todo){
       res.status(404).send()
     }else{
       res.send(todo)
     }
+    })
+    
   })
 
   app.post("/todos",(req,res)=>{
@@ -67,32 +78,53 @@
       title: req.body.title,
       description: req.body.description
     }
-    todos.push(newtodo);
-    res.status(201).json(newtodo);
+    fs.readFile("todos.json","utf-8",(err,data)=>{
+       
+        const todos=JSON.parse(data);
+        todos.push(newtodo);
+        fs.writeFile("todos.json",JSON.stringify(todos),(err)=>{
+            if(err) throw err;
+            res.status(201).json(newtodo);
+        })
+    })
   })
   
   app.put("/todos/:id",(req,res)=>{
     const id=req.params.id;
+    fs.readFile("todos.json","utf-8",(err,data)=>{
+        if(err) throw err;
+        const todos=JSON.parse(data);
     const todoindex=todos.findIndex((t)=>t.id===parseInt(id));
     if(todoindex===-1){
       res.status(404).send()
     }else{
       todos[todoindex].title=req.body.title;
       todos[todoindex].description=req.body.description;
-      res.send(200).json(todo[todoindex])
+      fs.writeFile("todos.json", JSON.stringify(todos), (err) => {
+        if (err) throw err;
+        res.status(200).json(updatedTodo);
+      });
+      
     }
-  })
+  })})
 
   app.delete("/todos/:id",(req,res)=>{
     const id=req.params.id;
+    fs.readFile("todos.json","utf-8",(err,data)=>{
+        if(err) throw err;
+        const todos=JSON.parse(data);
     const todoindex=todos.findIndex((t)=>t.id===parseInt(id));
     if(todoindex===-1){
       res.status(404).send()
     }else{
       todos.splice(todoindex,1);
-      res.status(200).send()
+      fs.writeFile("todos.json", JSON.stringify(todos), (err) => {
+        if (err) throw err;
+        res.status(200).send()
+      });
+      
     }
-  })
+  })})
 
   app.use((req, res, next) => {
     res.status(404).send();
