@@ -8,11 +8,16 @@ function adminMiddleware(req, res, next) {
     const words=token.split(" ");
     const jwtToken = words[1];
     const decodedValue=jwt.verify(jwtToken,JWT_SECRET);
-    if(decodedValue.username){
+    try{if(decodedValue.username){
         next();
     }else{
         res.status(403).json({
             msg:"you are not authenticated"
+        })
+    }}
+    catch(e){
+        res.json({
+            msg:"wrong"
         })
     }
 }
